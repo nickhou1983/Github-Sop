@@ -35,6 +35,7 @@
 
 > **⚠️ 注意**: 如果忘记 setup user 密码，必须通过 [GitHub Support Portal](https://support.github.com/) 联系支持重置，常规邮件重置流程对 setup user 不可用。
 
+
 #### 步骤 2 — 创建新的 PAT (classic)
 
 1. 进入 **Settings → Developer settings → Personal access tokens → Tokens (classic)**
@@ -47,8 +48,13 @@
 | **Expiration** | **No expiration**（强烈推荐） |
 | **Scopes** | 勾选 `scim:enterprise` |
 
+![PAT scope 配置](./image.png)
+![PAT 创建页面](./image-2.png)
+
 4. 点击 **Generate token**
 5. **立即复制 token 值** — 页面刷新后将无法再查看
+
+
 6. 将 token 存入企业密码管理工具（如 1Password / Azure Key Vault）
 
 > **⚠️ 重要**: 必须使用 **PAT classic**，SCIM provisioning 不支持 Fine-grained PAT。
@@ -64,8 +70,13 @@
 3. 找到并点击对应的应用：
    - OIDC 模式：**GitHub Enterprise Managed User (OIDC)**
    - SAML 模式：**GitHub Enterprise Managed User**
+
+![Enterprise App 列表](./image-3.png)
+
 4. 点击 **Provisioning** 选项卡
 5. 点击 **Stop provisioning**（暂停同步，避免更换期间产生失败请求）
+
+![Provisioning 页面](./image-4.png)
 
 #### 步骤 4 — 替换 Secret Token
 
@@ -75,6 +86,8 @@
 4. **Tenant URL** 保持不变（格式参考如下）：
    - GitHub.com: `https://api.github.com/scim/v2/enterprises/{enterprise}`
    - GHE.com: `https://api.{subdomain}.ghe.com/scim/v2/enterprises/{subdomain}`
+
+![Admin Credentials 配置](./image-5.png)
 
 #### 步骤 5 — 测试连接
 
