@@ -99,9 +99,8 @@ flowchart TD
 
 > **目的**：创建 Enterprise Team 并关联已同步的 Entra ID 组，实现组成员自动加入 Team。
 
-1. 登录 GitHub Enterprise → 进入 **Enterprise settings**
-2. 在左侧导航中选择 **Teams**
-3. 点击 **New team**
+1. 登录 GitHub Enterprise → 进入 **People** → 选择 **Enterprise Teams**
+2. 点击 **New team**
 4. 配置 Team 信息：
 
 | 字段 | 值 |
@@ -120,7 +119,7 @@ flowchart TD
 
 > **目的**：为 Enterprise Team 启用 GitHub Copilot，团队中的所有成员将自动获得 Copilot 访问权限。
 
-1. 在 GitHub Enterprise 中导航到 **Settings** → **Copilot** → **Access**
+1. 在 GitHub Enterprise 中导航到 **Billing and License** → **Copilot** → **Access**
 2. 在 Copilot 许可分配页面，选择 **Enable for specific teams**（如尚未选择）
 3. 点击 **Add teams**
 4. 搜索并选择步骤 3 中创建的 Enterprise Team
