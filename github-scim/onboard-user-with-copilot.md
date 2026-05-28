@@ -125,8 +125,8 @@ flowchart TD
 
 > **目的**：为 Team 启用 GitHub Copilot，团队中的所有成员将自动获得 Copilot 访问权限。
 
-1. 在 GitHub Enterprise 中导航到 **Billing and License** → 选择 **Assign License**
-2. 在许可分配页面，选择 **Copilot**
+1. 在 GitHub Enterprise 中导航到 **Billing and License** → 选择 **Copilot**
+2. 点击 **Assign License**
 3. 点击 **Add teams**
 4. 搜索并选择步骤 3 中创建的 Team
 5. 确认分配
@@ -139,13 +139,54 @@ flowchart TD
 
 > **目的**：将已同步到 GitHub 的用户添加到 Team，使其自动获得 Team 关联的 Copilot 许可和仓库访问权限。
 
+#### 方式一：手动添加单个用户
+
 1. 在 GitHub 中导航到步骤 3 创建的 Team 页面
 2. 点击 **Members** → **Add a member**
 3. 搜索步骤 2 中已同步的用户（使用 GitHub 用户名，通常格式为 `<entra-id-username>_<enterprise-slug>`）
 4. 选择用户并确认添加
 5. 设置用户在 Team 中的角色：**Member** 或 **Maintainer**
 
+#### 方式二：使用脚本批量添加用户到 Enterprise Team
+
+1. 准备 CSV 文件，第一列为 GitHub 用户名：
+
+```csv
+username
+zhangsan_enterprise
+lisi_enterprise
+wangwu_enterprise
+```
+
+1. 设置 GitHub Token：
+
+```bash
+export GITHUB_TOKEN="github_pat_xxx"
+```
+
+1. 先执行 dry-run 检查待添加用户：
+
+```bash
+python3 scripts/add-users-to-enterprise-team.py \
+    --enterprise <enterprise-slug> \
+    --team <enterprise-team-slug> \
+    --file scripts/users-sample.csv \
+    --dry-run
+```
+
+1. 确认无误后执行实际添加：
+
+```bash
+python3 scripts/add-users-to-enterprise-team.py \
+    --enterprise <enterprise-slug> \
+    --team <enterprise-team-slug> \
+    --file scripts/users-sample.csv
+```
+
+> 💡 **说明**：脚本使用 Enterprise Team API，需要使用 Enterprise Team slug，并确保 `GITHUB_TOKEN` 具备管理 Enterprise Team 成员关系的权限。
+
 **验证 Copilot 许可生效**：
+
 - 在 **Settings** → **Copilot** → **Access management** 页面确认用户显示为 Active
 - 用户登录 GitHub 后，在个人设置中应能看到 Copilot 已启用
 
