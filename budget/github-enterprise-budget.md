@@ -81,18 +81,19 @@ flowchart TD
 
 | 检查结果 | 后续动作 |
 | --- | --- |
-| 已配置企业级 Budget | 确认配置的企业Budget是否正确，是否启用停止使用策略，然后跳转到 **User 预算** 配置流程 |
+| 已配置企业级 Budget | 确认配置的企业Budget是否正确，是否启用停止使用策略，然后跳转到 **步骤3: User 预算** 配置流程 |
 | 未配置企业级 Budget | 继续执行步骤 2，配置企业级 Budget |
 
 > 💡 **说明**：如果看不到 **Billing & Licensing**，请确认当前账号是否具备 Enterprise Owner 或 Billing manager 权限。
 
 ---
 
-### 步骤 2：创建新的 Budget
+### 步骤 2：创建新的企业级 Budget
 
 > **目的**：创建企业级预算规则。
 
 1. 在 **Budgets and alerts** 页面点击 **New budget**
+![alt text](image-7.png)
 2. 在 **Budget Type** 中选择预算类型：
 ![alt text](image-2.png)
 
@@ -106,7 +107,6 @@ flowchart TD
 1. 在 **Budget scope** 区域选择 Scope
 2. 按需要选择以下范围：
 ![alt text](image-3.png)
-
 
 ---
 
