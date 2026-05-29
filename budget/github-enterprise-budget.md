@@ -1,6 +1,6 @@
 # GitHub Enterprise — 设置企业级 Budget
 
-> **适用场景**: 在 GitHub Enterprise 中为企业级账号配置 Budget，用于监控和控制 GitHub Actions、Codespaces、Packages、Copilot premium requests 等计量型产品的费用，并通过告警通知预算负责人。
+> **适用场景**: 当前文档配置的目的是确保在 6 月 1 日转为 Credits 收费后，不会出现某些用户在短期内消耗完企业 AI Credits 资源的情况。
 
 ---
 
@@ -14,7 +14,6 @@
 
 - **用户单独预算**：为指定用户设置单独预算，这个设置优先于用户级通用预算。例如设置为 `30 USD / month`，则该用户可以使用 `3000 Credits`。如果企业 AI Credits 共享池已用完，且企业级 Budget 设置为 `0 USD / month`，则该用户在使用完单独预算后，也无法继续使用 Copilot。
 
-- 当前文档配置的目的是确保在 6 月 1 日转为 Credits 收费后，不会出现某些用户在短期内消耗完企业 AI Credits 资源的情况。
 
 ---
 
