@@ -1,22 +1,19 @@
 # GitHub Enterprise — 设置企业级 Budget
 
-> **适用场景**: 当前文档配置的目的是确保在 6 月 1 日转为 Credits 收费后，不会出现某些用户在短期内消耗完企业 AI Credits 资源的情况。
+> **非常重要**：如果已经配置过企业 和 Cost Center级 Budget，这些 Budget 会自动转换为新的 Budget 体系，无需重复配置。**但是，仍需配置用户级Budget，确保不会发生某些用户快速消耗完企业 AI Credits 共享池资源的情况。**
 
-> **非常重要**：如果已经明确配置企业 和 Cost Center级 Budget，这些 Budget 会自动转换为新的 Budget 体系，无需重复配置。**但是，仍需配置用户级Budget，确保不会发生某些用户快速消耗完企业 AI Credits 共享池资源的情况。**
-
-> 企业级Budget不是必须配置，如果配置了用户级Budget，则用户不会超过用户级Budget的金额上限。
+> **企业级Budget不是必须配置，如果配置了用户级Budget，则用户不会超过用户级Budget的金额上限。**
 
 ---
 
-## Budget配置说明
+## Budget 分层说明
 
-**当前已设置的企业级 Budget / Cost Center 级Budget 会自动转换为新的 Budget 体系，转换后会保留原有的预算金额和告警设置。**
 
-- **企业级预算**：当设置为 `0 USD / month` 时，企业内所有用户在使用完企业共享的AI Credits 共享池后，将无法继续使用 Copilot，仅能使用代码补全功能。当设置为大于 `0 USD / month` 的金额，或不设置预算时，用户在使用完企业共享 AI Credits 池后，可以继续使用 Copilot，直到达到企业级 Budget 的金额上限。
+- **企业级预算**：控制企业所有用户可总共超额使用的额度。当设置为 `0 USD / month` 时，用户在使用完企业共享的AI Credits 共享池后，将无法继续使用 Copilot，仅能使用代码补全功能。当设置为大于 `0 USD / month` 的金额，或不设置预算时，用户在使用完企业共享 AI Credits 池后，可以继续使用 Copilot，直到达到企业级 Budget 的金额上限。
 
 - **用户级通用预算**：为企业内所有用户设置统一使用额度。例如设置为 `19 USD / month`，则所有用户在使用了 `1900 Credits` 后，将无法继续使用 Copilot。
 
-- **用户单独预算**：为指定用户设置单独预算，这个设置优先于用户级通用预算。例如设置为 `30 USD / month`，则该用户可以使用 `3000 Credits`。如果企业 AI Credits 共享池已用完，且企业级 Budget 设置为 `0 USD / month`，则该用户在使用完单独预算后，也无法继续使用 Copilot。
+- **用户单独预算**：为指定用户设置单独预算，这个设置优先于用户级通用预算。例如设置为 `30 USD / month`，则该用户可以使用 `3000 Credits`。但是如果企业 AI Credits 共享池已被用完，且企业级 Budget 设置为 `0 USD / month`，则该用户在使用完单独预算后，也无法继续使用 Copilot。
 
 
 ---
