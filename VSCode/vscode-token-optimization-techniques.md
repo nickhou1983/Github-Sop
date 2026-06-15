@@ -1,6 +1,6 @@
 # VS Code Token 优化关键技术详解
 
-> 基于 VS Code v1.118–v1.122 (2026年4月–5月) 版本更新内容整理
+> 基于 VS Code v1.118–v1.124 (2026年4月–6月) 版本更新内容整理
 
 随着 GitHub Copilot 于 2026 年 6 月 1 日转向按用量计费（Usage-based Billing），VS Code 团队系统性地实施了一系列 Token 优化策略，在不降低 Agent 质量的前提下显著减少 Token 消耗。
 
@@ -16,6 +16,8 @@
 - [6. WebSocket 持久连接](#6-websocket-持久连接)
 - [7. 独立 Skill 上下文隔离](#7-独立-skill-上下文隔离)
 - [8. 可配置 Utility Model](#8-可配置-utility-model)
+- [9. Advanced Autopilot — 智能循环终止](#9-advanced-autopilot--智能循环终止)
+- [10. 合并工具调用减少往返](#10-合并工具调用减少往返)
 - [总结](#总结)
 
 ---
@@ -387,6 +389,69 @@ VS Code 在后台使用模型处理多种辅助任务，这些任务不需要最
 
 ---
 
+## 9. Advanced Autopilot — 智能循环终止
+
+**引入版本**: v1.124  
+**设置**: `chat.autopilot.advanced.enabled`  
+**状态**: 实验性，需手动启用
+
+### 背景
+
+判断 Agent 是否真正完成任务很困难：过早停止会导致工作不完整，循环太久则**浪费时间和 Token**（官方原话："loop too long and you waste time and tokens"）。传统 Autopilot 依赖固定规则决定何时继续迭代、何时结束，难以兼顾质量与成本。
+
+### 工作原理
+
+```
+┌──────────────────────────────────────────────────────┐
+│  主 Agent (大模型)                                     │
+│  └── 执行编码任务循环                                  │
+└──────────────────────┬───────────────────────────────┘
+                       │ (对话 transcript)
+                       ▼
+┌──────────────────────────────────────────────────────┐
+│  小型 Utility Model (判定模型)                         │
+│  ├── 读取对话 transcript                               │
+│  ├── 判断任务是否真正完成                               │
+│  └── 决定继续迭代还是结束                               │
+└──────────────────────────────────────────────────────┘
+```
+
+- 不再依赖固定规则，由一个**小型 utility model** 读取对话 transcript 判断任务是否完成
+- Autopilot 当前追求的目标会显示在 Chat 上方的 tooltip 中，用户随时可见
+- **循环最多 3 次**即停止，从硬上限角度约束 Token 消耗
+
+### 优势
+
+- 避免 Agent 在任务已完成后继续无意义循环，直接减少多余轮次的 Token 开销
+- 用便宜的小模型做"是否完成"的判定，把昂贵的大模型留给实际编码
+- 在更完整的结果与可控成本之间取得平衡，无需人工盯着循环
+
+---
+
+## 10. 合并工具调用减少往返
+
+**引入版本**: v1.124  
+**涉及工具**: 集成浏览器的 `typeInPage` 工具（新增 `submit` 参数）
+
+### 背景
+
+在 Agent 驱动浏览器进行文本录入时，"输入文本"和"按回车提交"原本是两个独立的工具调用。每一次额外的工具调用都意味着一次完整的请求往返——重复传输上下文并消耗 Token。
+
+### 优化方式
+
+| 场景 | 优化前 | 优化后 |
+|------|--------|--------|
+| 输入并提交文本 | 两次 tool call（先 type，再按 Enter） | 一次 tool call（`typeInPage` 带 `submit: true`） |
+
+- `typeInPage` 工具新增 `submit` 参数，允许 Agent 在一次调用中**同时输入文本并按下回车**
+- 减少常见文本录入场景的请求往返次数，从而降低 Token 开销
+
+### 设计哲学
+
+> 每减少一次工具调用往返，就少一次完整上下文的传输与计费——把高频的多步操作合并为单步是控制 Token 的有效手段。
+
+---
+
 ## 总结
 
 ### 优化策略矩阵
@@ -401,6 +466,8 @@ VS Code 在后台使用模型处理多种辅助任务，这些任务不需要最
 | WebSocket | 传输重复 | 12% 加速 | v1.118 | 自动启用 |
 | Skill 上下文隔离 | 辅助内容污染 | 可变 | v1.118 | 实验性 |
 | Utility Model | 辅助任务成本 | 可变 | v1.121 | 可配置 |
+| Advanced Autopilot | 多余循环轮次 | 可变（最多 3 次循环） | v1.124 | 需手动启用 |
+| 合并工具调用 | 工具往返次数 | 可变 | v1.124 | 自动 |
 
 ### 设计哲学
 
@@ -478,5 +545,7 @@ flowchart TD
 - [VS Code 1.120 Release Notes](https://code.visualstudio.com/updates/v1_120)
 - [VS Code 1.121 Release Notes](https://code.visualstudio.com/updates/v1_121)
 - [VS Code 1.122 Release Notes](https://code.visualstudio.com/updates/v1_122)
+- [VS Code 1.123 Release Notes](https://code.visualstudio.com/updates/v1_123)
+- [VS Code 1.124 Release Notes](https://code.visualstudio.com/updates/v1_124)
 - [GitHub Copilot Usage-based Billing Announcement](https://github.blog/news-insights/company-news/github-copilot-is-moving-to-usage-based-billing/)
 - [How Copilot Understands Your Workspace](https://code.visualstudio.com/docs/copilot/reference/workspace-context)
