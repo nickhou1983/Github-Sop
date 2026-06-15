@@ -25,7 +25,8 @@
 ## 1. Prompt 缓存效率优化
 
 **引入版本**: v1.118  
-**效果**: 超过 93% 的请求内容从缓存复用；Anthropic 模型约 10 倍降低重复内容计费
+**效果**: 超过 93% 的请求内容从缓存复用；Anthropic 模型约 10 倍降低重复内容计费  
+**是否需要手动开启**: ❌ 否 — 默认启用，框架自动处理
 
 ### 背景
 
@@ -94,7 +95,8 @@ VS Code 审计了缓存断点的放置位置，确保它们位于**稳定边界*
 ## 2. Tool Search — 延迟加载工具
 
 **引入版本**: v1.118  
-**效果**: Anthropic 模型节省高达 20% Token；OpenAI 模型（GPT-5.4+）类似或更好
+**效果**: Anthropic 模型节省高达 20% Token；OpenAI 模型（GPT-5.4+）类似或更好  
+**是否需要手动开启**: ⚠️ 部分 — Anthropic 模型默认启用；OpenAI 模型需开启 `github.copilot.chat.responsesApi.toolSearchTool.enabled`
 
 ### 背景
 
@@ -137,7 +139,8 @@ VS Code Agent 拥有大量工具（文件操作、终端、Git、语言服务、
 ## 3. Agentic 子 Agent 工具
 
 **引入版本**: v1.118  
-**效果**: 经过一个月灰度测试，Token 节省高达 20%
+**效果**: 经过一个月灰度测试，Token 节省高达 20%  
+**是否需要手动开启**: ❌ 否 — 灰度逐步推出，自动启用
 
 ### 背景
 
@@ -203,7 +206,8 @@ Agent 工作流中，代码搜索和终端执行是两个高 Token 消耗场景�
 ## 4. 终端输出压缩
 
 **引入版本**: v1.120 (Preview) → v1.121 (扩展覆盖)  
-**设置**: `chat.tools.compressOutput.enabled`
+**设置**: `chat.tools.compressOutput.enabled`  
+**是否需要手动开启**: ✅ 是 — 需手动开启 `chat.tools.compressOutput.enabled`
 
 ### 背景
 
@@ -247,7 +251,8 @@ Agent 工作流中，代码搜索和终端执行是两个高 Token 消耗场景�
 
 **引入版本**: v1.119  
 **设置**: `github.copilot.chat.agent.backgroundTodoAgent.enabled`  
-**状态**: 实验性，默认关闭
+**状态**: 实验性，默认关闭  
+**是否需要手动开启**: ✅ 是 — 实验性，默认关闭，需手动开启 `github.copilot.chat.agent.backgroundTodoAgent.enabled`
 
 ### 背景
 
@@ -285,7 +290,8 @@ Todo 列表帮助 Agent 在复杂多步任务中保持方向感。但主模型�
 
 **引入版本**: v1.118  
 **效果**: OpenAI 模型速度提升 12%  
-**配置**: 自动启用，无需手动配置
+**配置**: 自动启用，无需手动配置  
+**是否需要手动开启**: ❌ 否 — 自动启用，无需手动配置
 
 ### 背景
 
@@ -311,7 +317,8 @@ Todo 列表帮助 Agent 在复杂多步任务中保持方向感。但主模型�
 
 **引入版本**: v1.118  
 **设置**: `github.copilot.chat.skillTool.enabled`  
-**状态**: 实验性
+**状态**: 实验性  
+**是否需要手动开启**: ✅ 是 — 实验性，需手动开启 `github.copilot.chat.skillTool.enabled`，并在 SKILL.md 中设置 `context: fork`
 
 ### 背景
 
@@ -356,7 +363,8 @@ context: fork    # ← 关键配置：独立上下文
 ## 8. 可配置 Utility Model
 
 **引入版本**: v1.121  
-**设置**: `chat.utilityModel`、`chat.utilitySmallModel`
+**设置**: `chat.utilityModel`、`chat.utilitySmallModel`  
+**是否需要手动开启**: ⚠️ 可选 — 默认已有内置模型，仅在需要自定义模型时手动配置 `chat.utilityModel` / `chat.utilitySmallModel`
 
 ### 背景
 
@@ -393,7 +401,8 @@ VS Code 在后台使用模型处理多种辅助任务，这些任务不需要最
 
 **引入版本**: v1.124  
 **设置**: `chat.autopilot.advanced.enabled`  
-**状态**: 实验性，需手动启用
+**状态**: 实验性，需手动启用  
+**是否需要手动开启**: ✅ 是 — 实验性，需手动开启 `chat.autopilot.advanced.enabled`
 
 ### 背景
 
@@ -431,7 +440,8 @@ VS Code 在后台使用模型处理多种辅助任务，这些任务不需要最
 ## 10. 合并工具调用减少往返
 
 **引入版本**: v1.124  
-**涉及工具**: 集成浏览器的 `typeInPage` 工具（新增 `submit` 参数）
+**涉及工具**: 集成浏览器的 `typeInPage` 工具（新增 `submit` 参数）  
+**是否需要手动开启**: ❌ 否 — Agent 自动使用，无需配置
 
 ### 背景
 
