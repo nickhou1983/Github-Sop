@@ -18,6 +18,8 @@
 - [8. 可配置 Utility Model](#8-可配置-utility-model)
 - [9. Advanced Autopilot — 智能循环终止](#9-advanced-autopilot--智能循环终止)
 - [10. 合并工具调用减少往返](#10-合并工具调用减少往返)
+- [11. OpenAI 扩展提示缓存](#11-openai-扩展提示缓存)
+- [12. Auto 自动模型选择](#12-auto-自动模型选择)
 - [总结](#总结)
 
 ---
@@ -462,6 +464,111 @@ VS Code 在后台使用模型处理多种辅助任务，这些任务不需要最
 
 ---
 
+## 11. OpenAI 扩展提示缓存
+
+**来源**: VS Code 官方博客 *Improving token efficiency for GitHub Copilot in VS Code*（2026-06-17）  
+**适用模型**: OpenAI 支持缓存输入计费的模型  
+**请求参数**: `prompt_cache_retention: "24h"`  
+**是否需要手动开启**: ❌ 否 — VS Code 已为支持的 OpenAI 模型默认启用，无需用户配置
+
+### 背景
+
+与 Anthropic 需要显式放置 `cache_control` 断点不同，OpenAI 模型**自动**缓存 prompt prefix：提供商自行推断可复用前缀并跨请求复用其模型状态。对多数支持缓存输入计费的 OpenAI 模型，**未缓存输入 Token 的价格是缓存输入 Token 的 10 倍**。
+
+问题在于：默认缓存住在**快速 GPU 内存**中，闲置约 **5–10 分钟（某些情况最多 1 小时）后被丢弃**。一旦缓存过期，下一次请求就必须按完整未缓存价格重新处理整个 prefix。
+
+### 优化手段
+
+VS Code 经评估后，通过 `prompt_cache_retention` 请求体参数为支持的模型启用**扩展提示缓存**：
+
+```json
+{
+  "prompt_cache_retention": "24h"
+}
+```
+
+- 设置 `"24h"` 后，缓存从快速 GPU 内存**转移到更大但稍慢的 GPU 本地存储**，保留最长 **24 小时**
+- 长时间停顿后恢复会话仍能命中缓存，避免按全价重新处理 prefix，保持“接着上次工作”既快又便宜
+
+### 效果数据
+
+启用后缓存命中率的**相对提升**（间隔越长提升越明显，表中为相对变化而非百分点）：
+
+| 请求间隔 | 缓存命中率相对提升（三组指标） |
+|----------|-------------------------------|
+| 10–20 分钟 | +13% / +32% / +10% |
+| 20–30 分钟 | +135% / +142% / +137% |
+| 30–40 分钟 | +301% / +203% / +679% |
+| 40–60 分钟 | +338% / +279% / +919% |
+
+> 间隔越长，本应过期的缓存越能被保留复用，提升越大；40–60 分钟间隔下某项指标提升高达 **+919%**（即原值的 10.19 倍）。更多 prompt 以较低的缓存输入费率处理，即使长时间停顿后也能降低请求成本。
+
+### 与其他缓存技术的区别
+
+| 维度 | 第 1 章 Anthropic 智能缓存 | 本章 OpenAI 扩展缓存 |
+|------|---------------------------|------------------------|
+| 缓存方式 | 调用方显式放置 `cache_control` 断点 | 提供商自动推断 prefix |
+| 优化重点 | **断点位置**（空间维度） | **缓存存活时长**（时间维度） |
+| 关键参数 | 4 个缓存断点 | `prompt_cache_retention: "24h"` |
+
+---
+
+## 12. Auto 自动模型选择
+
+**来源**: GitHub 博客 *Getting more from each token: How Copilot improves context handling and model routing*（2026-06-17）  
+**适用范围**: VS Code、github.com、移动端（陆续扩展到 Copilot CLI、GitHub App 及更多 IDE）  
+**是否需要手动开启**: ⚠️ 选择式 — 需在模型选择器中选择 **Auto**（推荐默认）；管理员可将其设为组织默认或强制选项
+
+### 背景
+
+Token 效率不仅在于“用更少 Token”，还在于“用对模型”。不同任务（快速解释、聚焦编辑、多文件变更）并不都需要同等强度的推理。在评估中，**没有任何单一模型在所有任务上持续表现最佳**：许多场景下更高效的模型能达到相同结果，而更强的模型仅在需要深度推理时才关键。Auto 在不牺牲质量的前提下自动选择最适合当前任务的模型。
+
+### Auto 如何选择模型
+
+Auto 结合**两个信号**进行路由：
+
+| 信号 | 说明 |
+|------|------|
+| **实时模型健康状况** | 动态引擎跟踪模型可用性、负载、速度、错误率和成本，确保路由到“既胜任又可立即响应”的模型 |
+| **任务感知路由（HyDRA）** | 一个路由模型综合推理深度、代码复杂度、调试难度、工具编排需求等因素，先筛出能达到质量门槛的模型，再在其中选最佳匹配 |
+
+> HyDRA 可调优的运行点示例：峰值（Peak）点在超越 Sonnet 质量的同时节省 12.9%；激进（Agg.）点在平衡质量下节省高达 72.5%。在 SWEBench 基准上，HyDRA（Cons.）以 3.3 倍的节省幅度追平 OpenRouter Auto 的解决率（70.8%）。
+
+### 在实际工作流中落地
+
+#### 缓存感知路由（Cache-aware routing）
+
+这是 Auto 与前述缓存技术的**关键协同点**：
+
+- 每轮都切换模型看似灵活，但会**破坏 prompt prefix 缓存**，其代价可能超过路由本身的收益
+- Auto 只在**自然缓存边界**路由：第一轮（无缓存可损失）以及 **compaction 之后**（旧轮被摘要、prefix 重置时）
+- 边界之间保持同一模型不变，让缓存持续积累
+
+#### 跨语言路由
+
+- 路由模型在 **16 个语系**（含 CJK、欧洲语系等）的对话上训练
+- 各语言组的路由准确度与英语基线相差**在 4 个百分点以内**，无显著质量差距
+
+#### 学习何时需要升级（escalation）
+
+- 不是简单地把任务标为“易”或“难”，而是训练路由器学习模型在哪里真正产生差异
+- 对每个训练 query，分别用较弱和较强模型生成响应并打分，让路由器学会“何时更强模型才有价值”
+- 对长会话中的上下文相关消息，路由器基于完整多轮对话（原始意图、最近助手响应、对话元数据）训练
+
+### 与 Token 优化的关系
+
+> Auto 从**模型选择维度**降低成本：能高效模型完成的任务不再默认交给最贵的大模型，同时通过缓存感知路由避免因频繁切换模型而破坏缓存。与前面“减少重复输入”的 harness 优化互补。
+
+### 获取更多 AI Credits 价值的实践建议
+
+- **从 Auto 开始**：作为多数任务的强默认
+- **保持上下文聚焦**：切换任务时开新会话，适时 compact 长会话，已知代码位置时直接 #file 指定
+- **避免会话中途改模型/设置**：切换模型、推理等级、上下文大小或工具配置会破坏缓存复用
+- **先规划再并行**：并行 Agent 会并行消耗 credits，需有意识地使用
+- **只启用需要的工具**：宽泛的工具集/MCP 会增加额外上下文
+
+---
+
 ## 总结
 
 ### 优化策略矩阵
@@ -478,6 +585,8 @@ VS Code 在后台使用模型处理多种辅助任务，这些任务不需要最
 | Utility Model | 辅助任务成本 | 可变 | v1.121 | 可配置 |
 | Advanced Autopilot | 多余循环轮次 | 可变（最多 3 次循环） | v1.124 | 需手动启用 |
 | 合并工具调用 | 工具往返次数 | 可变 | v1.124 | 自动 |
+| OpenAI 扩展缓存 | 缓存存活时长 | 长间隔命中率大幅提升 | 博客 2026-06 | 自动启用 |
+| Auto 模型选择 | 模型选择成本 | 最高约 72.5% 节省 | 博客 2026-06 | 选择启用（推荐） |
 
 ### 设计哲学
 
@@ -557,5 +666,8 @@ flowchart TD
 - [VS Code 1.122 Release Notes](https://code.visualstudio.com/updates/v1_122)
 - [VS Code 1.123 Release Notes](https://code.visualstudio.com/updates/v1_123)
 - [VS Code 1.124 Release Notes](https://code.visualstudio.com/updates/v1_124)
+- [Improving token efficiency for GitHub Copilot in VS Code (博客, 2026-06-17)](https://code.visualstudio.com/blogs/2026/06/17/improving-token-efficiency-in-github-copilot)
+- [Getting more from each token: How Copilot improves context handling and model routing (GitHub 博客, 2026-06-17)](https://github.blog/ai-and-ml/github-copilot/getting-more-from-each-token-how-copilot-improves-context-handling-and-model-routing/)
+- [Auto model selection 文档](https://docs.github.com/en/copilot/concepts/auto-model-selection)
 - [GitHub Copilot Usage-based Billing Announcement](https://github.blog/news-insights/company-news/github-copilot-is-moving-to-usage-based-billing/)
 - [How Copilot Understands Your Workspace](https://code.visualstudio.com/docs/copilot/reference/workspace-context)
